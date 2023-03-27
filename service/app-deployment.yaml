@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-deployment
+  labels:
+    app: go-chi-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-chi-demo
+  template:
+    metadata:
+      labels:
+        app: go-chi-demo
+    spec:
+      containers:
+        - name: go-chi-demo
+          image: go-chi-demo:latest
+          # kubernetes will try to pull the image from docker hub and not locally if imagePullPolicy: Never is not set
+          # See https://stackoverflow.com/questions/50739405/docker-for-mac-kubernetes-reference-local-image
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DB_URL
+              value: http://arangodb:8529
+            - name: DB_USER
+              value: root
+            - name: DB_PW
+              value: test
