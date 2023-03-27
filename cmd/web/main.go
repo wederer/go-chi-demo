@@ -19,12 +19,15 @@ func main() {
 	s.SetupDatabase()
 
 	port := "3000"
-	if value, ok := os.LookupEnv("DEMO_PORT"); ok {
+	if value, ok := os.LookupEnv("PORT"); ok {
 		port = value
 	}
-	port = fmt.Sprintf(":%v", port)
 	log.Printf("Listening on port %v\n", port)
-	http.ListenAndServe(port, s.Router)
+	port = fmt.Sprintf(":%v", port)
+	err := http.ListenAndServe(port, s.Router)
+	if err != nil {
+		log.Fatalf("Error starting server: %v\n", err)
+	}
 }
 
 func CreateNewServer() *Server {
