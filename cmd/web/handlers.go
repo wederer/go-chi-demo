@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/arangodb/go-driver"
 	"github.com/go-chi/chi/v5"
@@ -23,14 +24,12 @@ func (s *Server) GetBook(w http.ResponseWriter, r *http.Request) {
 	var book Book
 	_, err := s.Books.ReadDocument(nil, idParam, &book)
 	if &book == nil || driver.IsNotFoundGeneral(err) {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(fmt.Sprintf("Book with id %v not found.", idParam)))
+		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 	if err != nil {
 		log.Printf("Failed to read document: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -38,17 +37,21 @@ func (s *Server) GetBook(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
-	book := Book{
-		Title:   "ArangoDB Cookbook",
-		NoPages: 257,
+	var book Book
+
+	err := json.NewDecoder(r.Body).Decode(&book)
+	if err != nil {
+		log.Printf("Failed to parse body %v with error: %v", r.Body, err)
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
+
 	var result Book
 	ctx := driver.WithReturnNew(nil, &result)
-	_, err := s.Books.CreateDocument(ctx, book)
+	_, err = s.Books.CreateDocument(ctx, book)
 	if err != nil {
 		log.Printf("Failed to create document: %v", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("Internal Server Error"))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	fmt.Printf("Created document in collection '%s'\n", s.Books.Name())

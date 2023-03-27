@@ -86,6 +86,9 @@ func (s *Server) SetupDatabase() {
 	}
 
 	colExists, err := db.CollectionExists(nil, "books")
+	if err != nil {
+		log.Fatalf("Failed to check for collection: %v", err)
+	}
 	var coll driver.Collection
 	if colExists == true {
 		coll, err = db.Collection(nil, "books")
