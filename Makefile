@@ -1,5 +1,5 @@
 run:
-	DB_URL=http://localhost:31529 DB_USER=root DB_PW=test go run github.com/wederer/go-chi-demo/cmd/web
+	DB_URL=http://localhost:31529 DB_USER=root DB_PW=test SRV_ADDR=localhost:3000 go run github.com/wederer/go-chi-demo/cmd/web
 build:
 	go build -o bin/ github.com/wederer/go-chi-demo/cmd/web
 build-docker:

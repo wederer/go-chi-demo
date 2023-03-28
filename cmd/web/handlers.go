@@ -58,3 +58,11 @@ func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Created Book '%s'\n", s.Books.Name())
 	w.Write([]byte(fmt.Sprintf("%v", result)))
 }
+
+func (s *Server) GetProtectedData(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte(fmt.Sprint("Secret Protected Info")))
+}
+
+func (s *Server) GetAdminInfo(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte(fmt.Sprint("Even more secret info that only admins can read.")))
+}

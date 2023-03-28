@@ -1,11 +1,11 @@
 package main
 
 import (
-	"fmt"
 	driver "github.com/arangodb/go-driver"
 	driverhttp "github.com/arangodb/go-driver/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/jwtauth/v5"
 	"log"
 	"net/http"
 	"os"
@@ -35,11 +35,47 @@ func CreateNewServer() *Server {
 func (s *Server) MountMiddlewares() {
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.CleanPath)
+	s.Router.Use(middleware.Recoverer)
 }
 func (s *Server) MountHandlers() {
-	s.Router.Get("/", s.HelloWorld)
-	s.Router.Get("/book/{id}", s.GetBook)
-	s.Router.Post("/book", s.CreateBook)
+	// Public Routes
+	s.Router.Group(func(r chi.Router) {
+		s.Router.Get("/", s.HelloWorld)
+		s.Router.Get("/books/{id}", s.GetBook)
+		s.Router.Post("/books", s.CreateBook)
+	})
+
+	// Protected Routes
+	tokenAuth := jwtauth.New("HS256", []byte("secret"), nil)
+	s.Router.Group(func(r chi.Router) {
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator)
+
+		r.Get("/protected", s.GetProtectedData)
+
+		// Admin Routes that are only accessible if admin: true is set
+		r.Route("/admin", func(r chi.Router) {
+			r.Use(ClaimBoolAuthenticator("admin", true))
+			r.Get("/info", s.GetAdminInfo)
+		})
+	})
+
+}
+
+// ClaimBoolAuthenticator returns an Authenticator that checks if a claim is present and equal to the given value
+func ClaimBoolAuthenticator(claim string, value any) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			token, _, _ := jwtauth.FromContext(r.Context())
+
+			if claimValue, ok := token.Get(claim); ok == false || claimValue != value {
+				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func (s *Server) SetupDatabase() {
@@ -94,13 +130,12 @@ func (s *Server) SetupDatabase() {
 }
 
 func (s *Server) Start() {
-	port := "3000"
-	if value, ok := os.LookupEnv("PORT"); ok {
-		port = value
+	addr := ":3000"
+	if value, ok := os.LookupEnv("SRV_ADDR"); ok {
+		addr = value
 	}
-	log.Printf("Listening on port %v\n", port)
-	port = fmt.Sprintf(":%v", port)
-	err := http.ListenAndServe(port, s.Router)
+	log.Printf("Listening on address %v\n", addr)
+	err := http.ListenAndServe(addr, s.Router)
 	if err != nil {
 		log.Fatalf("Error starting server: %v\n", err)
 	}
