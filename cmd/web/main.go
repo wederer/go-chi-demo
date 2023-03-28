@@ -18,27 +18,18 @@ func main() {
 	s.MountHandlers()
 	s.SetupDatabase()
 
-	port := "3000"
-	if value, ok := os.LookupEnv("PORT"); ok {
-		port = value
-	}
-	log.Printf("Listening on port %v\n", port)
-	port = fmt.Sprintf(":%v", port)
-	err := http.ListenAndServe(port, s.Router)
-	if err != nil {
-		log.Fatalf("Error starting server: %v\n", err)
-	}
+	s.Start()
+}
+
+type Server struct {
+	Router *chi.Mux
+	Books  driver.Collection
 }
 
 func CreateNewServer() *Server {
 	s := &Server{}
 	s.Router = chi.NewRouter()
 	return s
-}
-
-type Server struct {
-	Router *chi.Mux
-	Books  driver.Collection
 }
 
 func (s *Server) MountMiddlewares() {
@@ -100,4 +91,17 @@ func (s *Server) SetupDatabase() {
 	}
 
 	s.Books = coll
+}
+
+func (s *Server) Start() {
+	port := "3000"
+	if value, ok := os.LookupEnv("PORT"); ok {
+		port = value
+	}
+	log.Printf("Listening on port %v\n", port)
+	port = fmt.Sprintf(":%v", port)
+	err := http.ListenAndServe(port, s.Router)
+	if err != nil {
+		log.Fatalf("Error starting server: %v\n", err)
+	}
 }

@@ -9,7 +9,7 @@ RUN go mod download
 
 COPY . .
 
-RUN GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -o /app-build /app/cmd/web/main.go
+RUN GOOS=linux GARCH=amd64 CGO_ENABLED=0 go build -o /app-build github.com/wederer/go-chi-demo/cmd/web
 
 FROM alpine:latest
 WORKDIR /

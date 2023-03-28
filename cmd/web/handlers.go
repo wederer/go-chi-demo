@@ -14,7 +14,7 @@ type Book struct {
 	NoPages int    `json:"no_pages"`
 }
 
-func (s *Server) HelloWorld(w http.ResponseWriter, r *http.Request) {
+func (s *Server) HelloWorld(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("Hello World!"))
 }
 
@@ -54,7 +54,7 @@ func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("Created document in collection '%s'\n", s.Books.Name())
 
+	log.Printf("Created Book '%s'\n", s.Books.Name())
 	w.Write([]byte(fmt.Sprintf("%v", result)))
 }
