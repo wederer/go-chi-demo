@@ -53,6 +53,20 @@ func TestServer_GetBook(t *testing.T) {
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 
+func TestServer_GetBooks(t *testing.T) {
+	s := CreateNewServer()
+	s.MountHandlers()
+	s.setupMockDatabase()
+
+	req, _ := http.NewRequest("GET", "/books", nil)
+	response := executeRequest(req, s)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	req, _ = http.NewRequest("GET", "/books/correct_key", nil)
+	response = executeRequest(req, s)
+	checkResponseCode(t, http.StatusOK, response.Code)
+}
+
 func TestServer_GetProtectedData(t *testing.T) {
 	s := CreateNewServer()
 	s.MountHandlers()

@@ -36,6 +36,36 @@ func (s *Server) GetBook(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("%v", book)))
 }
 
+func (s *Server) GetBooks(w http.ResponseWriter, r *http.Request) {
+	var books = make(map[string]interface{}, 0)
+	var booksSlice = make([]Book, 0)
+	ctx := driver.WithQueryCount(nil)
+	cursor, err := s.DB.Query(ctx, "FOR doc IN books RETURN doc", books)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close()
+	for i := 0; i < int(cursor.Count()); i++ {
+		var book Book
+		cursor.ReadDocument(nil, &book)
+		log.Println(book)
+		booksSlice = append(booksSlice, book)
+	}
+
+	if &books == nil || driver.IsNotFoundGeneral(err) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("Failed to read document: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(fmt.Sprintf("%v", booksSlice)))
+}
+
 func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
 	var book Book
 

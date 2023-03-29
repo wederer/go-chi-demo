@@ -24,6 +24,7 @@ func main() {
 type Server struct {
 	Router *chi.Mux
 	Books  driver.Collection
+	DB     driver.Database
 }
 
 func CreateNewServer() *Server {
@@ -41,6 +42,7 @@ func (s *Server) MountHandlers() {
 	// Public Routes
 	s.Router.Group(func(r chi.Router) {
 		s.Router.Get("/", s.HelloWorld)
+		s.Router.Get("/books", s.GetBooks)
 		s.Router.Get("/books/{id}", s.GetBook)
 		s.Router.Post("/books", s.CreateBook)
 	})
@@ -126,6 +128,7 @@ func (s *Server) SetupDatabase() {
 		log.Fatalf("Failed to create/get collection: %v", err)
 	}
 
+	s.DB = db
 	s.Books = coll
 }
 
