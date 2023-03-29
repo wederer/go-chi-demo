@@ -25,6 +25,8 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: always()
         with:
-          name: e2e/playwright-report
-          path: e2e/playwright-report
+          name: playwright-report
+          # prepend frontend because upload-artifact does not use working-directory setting
+          # see https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
+          path: frontend/e2eplaywright-report
           retention-days: 30
