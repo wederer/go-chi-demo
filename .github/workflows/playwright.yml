@@ -28,5 +28,5 @@ jobs:
           name: playwright-report
           # prepend frontend because upload-artifact does not use working-directory setting
           # see https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-          path: frontend/e2eplaywright-report
+          path: frontend/e2e/playwright-report
           retention-days: 30
