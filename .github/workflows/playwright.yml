@@ -8,6 +8,8 @@ jobs:
   test:
     timeout-minutes: 60
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: ./frontend
@@ -20,6 +22,9 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
+      # build is needed as e2e test uses vite preview which serves the dist folder
+      - name: Build
+        run: npm run build
       - name: Run Playwright tests
         run: npm run test:e2e
       - uses: actions/upload-artifact@v3
@@ -39,3 +44,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/e2e/playwright-report
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
