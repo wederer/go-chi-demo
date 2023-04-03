@@ -5,14 +5,10 @@ import (
 	"fmt"
 	"github.com/arangodb/go-driver"
 	"github.com/go-chi/chi/v5"
+	"github.com/wederer/go-chi-demo/internal/models"
 	"log"
 	"net/http"
 )
-
-type Book struct {
-	Title   string `json:"title"`
-	NoPages int    `json:"no_pages"`
-}
 
 func (s *Server) HelloWorld(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("Hello World!"))
@@ -21,9 +17,8 @@ func (s *Server) HelloWorld(w http.ResponseWriter, _ *http.Request) {
 func (s *Server) GetBook(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "id")
 
-	var book Book
-	_, err := s.Books.ReadDocument(nil, idParam, &book)
-	if &book == nil || driver.IsNotFoundGeneral(err) {
+	book, err := s.Books2.Read(idParam)
+	if book == nil || driver.IsNotFoundGeneral(err) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
@@ -33,12 +28,29 @@ func (s *Server) GetBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("%v", book)))
+	w.Write([]byte(fmt.Sprintf("%v", *book)))
+}
+
+func (s *Server) DeleteBook(w http.ResponseWriter, r *http.Request) {
+	idParam := chi.URLParam(r, "id")
+
+	_, err := s.Books.RemoveDocument(nil, idParam)
+	if driver.IsNotFoundGeneral(err) {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	if err != nil {
+		log.Printf("Failed to read document: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(200)
 }
 
 func (s *Server) GetBooks(w http.ResponseWriter, r *http.Request) {
 	var books = make(map[string]interface{}, 0)
-	var booksSlice = make([]Book, 0)
+	var booksSlice = make([]models.Book, 0)
 	ctx := driver.WithQueryCount(nil)
 	cursor, err := s.DB.Query(ctx, "FOR doc IN books RETURN doc", books)
 	if err != nil {
@@ -47,9 +59,9 @@ func (s *Server) GetBooks(w http.ResponseWriter, r *http.Request) {
 	}
 	defer cursor.Close()
 	for i := 0; i < int(cursor.Count()); i++ {
-		var book Book
-		cursor.ReadDocument(nil, &book)
-		log.Println(book)
+		var book models.Book
+		meta, _ := cursor.ReadDocument(nil, &book)
+		book.Key = meta.Key
 		booksSlice = append(booksSlice, book)
 	}
 
@@ -57,17 +69,25 @@ func (s *Server) GetBooks(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
+
 	if err != nil {
 		log.Printf("Failed to read document: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Write([]byte(fmt.Sprintf("%v", booksSlice)))
+	mJson, err := json.Marshal(booksSlice)
+
+	if err != nil {
+		log.Printf("Failed to marshall document: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Write(mJson)
 }
 
 func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
-	var book Book
+	var book models.Book
 
 	err := json.NewDecoder(r.Body).Decode(&book)
 	if err != nil {
@@ -76,7 +96,7 @@ func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var result Book
+	var result models.Book
 	ctx := driver.WithReturnNew(nil, &result)
 	_, err = s.Books.CreateDocument(ctx, book)
 	if err != nil {

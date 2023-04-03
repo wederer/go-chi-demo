@@ -5,7 +5,9 @@ import (
 	driverhttp "github.com/arangodb/go-driver/http"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
+	"github.com/wederer/go-chi-demo/internal/models"
 	"log"
 	"net/http"
 	"os"
@@ -23,8 +25,10 @@ func main() {
 
 type Server struct {
 	Router *chi.Mux
-	Books  driver.Collection
 	DB     driver.Database
+	// TODO: replace this with Books2
+	Books  driver.Collection
+	Books2 models.BookModelInterface
 }
 
 func CreateNewServer() *Server {
@@ -37,6 +41,16 @@ func (s *Server) MountMiddlewares() {
 	s.Router.Use(middleware.Logger)
 	s.Router.Use(middleware.CleanPath)
 	s.Router.Use(middleware.Recoverer)
+	s.Router.Use(cors.Handler(cors.Options{
+		// AllowedOrigins:   []string{"https://foo.com"}, // Use this to allow specific origin hosts
+		AllowedOrigins: []string{"https://*", "http://*"},
+		// AllowOriginFunc:  func(r *http.Request, origin string) bool { return true },
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: false,
+		MaxAge:           300, // Maximum value not ignored by any of major browsers
+	}))
 }
 func (s *Server) MountHandlers() {
 	// Public Routes
@@ -45,6 +59,7 @@ func (s *Server) MountHandlers() {
 		s.Router.Get("/books", s.GetBooks)
 		s.Router.Get("/books/{id}", s.GetBook)
 		s.Router.Post("/books", s.CreateBook)
+		s.Router.Delete("/books/{id}", s.DeleteBook)
 	})
 
 	// Protected Routes
@@ -130,6 +145,7 @@ func (s *Server) SetupDatabase() {
 
 	s.DB = db
 	s.Books = coll
+	s.Books2 = models.New(db)
 }
 
 func (s *Server) Start() {

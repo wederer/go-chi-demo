@@ -1,0 +1,18 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="go build github.com/wederer/go-chi-demo/cmd/web" type="GoApplicationRunConfiguration" factoryName="Go Application" nameIsGenerated="true">
+    <module name="go-chi-demo" />
+    <working_directory value="$PROJECT_DIR$" />
+    <envs>
+      <env name="DB_PW" value="test" />
+      <env name="DB_URL" value="http://localhost:31529" />
+      <env name="DB_USER" value="root" />
+      <env name="SRV_ADDR" value="localhost:3000" />
+    </envs>
+    <kind value="PACKAGE" />
+    <package value="github.com/wederer/go-chi-demo/cmd/web" />
+    <directory value="$PROJECT_DIR$" />
+    <filePath value="$PROJECT_DIR$" />
+    <output_directory value="$PROJECT_DIR$/backend/bin" />
+    <method v="2" />
+  </configuration>
+</component>
