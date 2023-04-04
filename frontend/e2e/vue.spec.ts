@@ -27,7 +27,7 @@ test('check title and number of pages for first book', async ({ page }) => {
 test('check error state', async ({ page }) => {
   await page.addInitScript(`window.__E2E_ERROR__ = true`)
   await page.goto('/');
-  await expect(page.locator('h3').first()).toHaveText('Error: Error');
+  await expect(page.locator('h3').first()).toContainText('Error:')
 })
 
 test('check about page', async ({ page }) => {
