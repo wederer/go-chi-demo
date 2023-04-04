@@ -31,6 +31,7 @@ test('check error state', async ({ page }) => {
 })
 
 test('check about page', async ({ page }) => {
-  await page.goto('/about');
+  await page.goto('/');
+  await page.getByRole('link', { name: 'About' }).click();
   await expect(page.locator('h1')).toHaveText('This is an about page');
 })

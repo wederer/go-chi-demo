@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev:e2e": "vite --mode e2e",
     "build": "run-p type-check build-only",
     "preview": "vite preview",
     "test:unit": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --trace on",
+    "test:generate": "playwright codegen",
     "e2e:report": "playwright show-report e2e/playwright-report",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
