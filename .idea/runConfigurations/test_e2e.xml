@@ -3,10 +3,12 @@
     <package-json value="$PROJECT_DIR$/frontend/package.json" />
     <command value="run" />
     <scripts>
-      <script value="test:e2e" />
+      <script value="test:playwright" />
     </scripts>
     <node-interpreter value="project" />
-    <envs />
+    <envs>
+      <env name="CI" value="true" />
+    </envs>
     <method v="2" />
   </configuration>
 </component>

@@ -22,11 +22,8 @@ jobs:
         run: npm ci
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps
-      # build is needed as e2e test uses vite preview which serves the dist folder
-      - name: Build
-        run: npm run build
       - name: Run Playwright tests
-        run: npm run test:e2e
+        run: npm run test:playwright
       - uses: actions/upload-artifact@v3
         if: always()
         with:
