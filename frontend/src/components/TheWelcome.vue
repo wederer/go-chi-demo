@@ -25,6 +25,7 @@ fetchBooks()
 </script>
 
 <template>
+  <h1>Test Change</h1>
   <h3 v-if="state.error">Error: {{state.error}}</h3>
   <div v-else>
     <v-table v-if="state.books.length > 0">
