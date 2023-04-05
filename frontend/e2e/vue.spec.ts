@@ -16,12 +16,11 @@ test.beforeEach(async ({ page }, testInfo) => {
   page.on('console', msg => console.log(msg.text()))
 })
 
-// See here how to get started:
-// https://playwright.dev/docs/intro
-test('check title and number of pages for first book', async ({ page }) => {
+test('check home', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('tbody > tr:first-child > td').first()).toHaveText('some-title');
   await expect(page.locator('tbody > tr:first-child > td:nth-child(2)')).toHaveText('42');
+  await expect(page).toHaveScreenshot()
 })
 
 test('check error state', async ({ page }) => {
@@ -34,4 +33,5 @@ test('check about page', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('link', { name: 'About' }).click();
   await expect(page.locator('h1')).toHaveText('This is an about page');
+  await expect(page).toHaveScreenshot()
 })
