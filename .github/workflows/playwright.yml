@@ -32,6 +32,9 @@ jobs:
           # see https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
           path: frontend/e2e/playwright-report
           retention-days: 30
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +%F)"
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         # If you're changing the branch from main,
@@ -41,5 +44,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./frontend/e2e/playwright-report
+          destination_dir: report_${{ steps.date.outputs.date }}_${{ github.run_id }}
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
