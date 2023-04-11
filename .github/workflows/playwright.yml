@@ -47,14 +47,14 @@ jobs:
           user_email: 'github-actions[bot]@users.noreply.github.com'
       - name: Echo Report URL to stdout
         run: |
-          echo "See the Playwright Report at https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}.
-            The report will take a few minutes to be online."
+          echo "See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}).
+          The report will take a few minutes to be online."
         shell: bash
       - name: Comment Report URL to PR
         uses: thollander/actions-comment-pull-request@v2
         if: github.event_name == 'pull_request'
         with:
           message: |
-            See the Playwright Report at https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}.
+            See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}).
             The report will take a few minutes to be online.
           comment_tag: gh-pages-report-url
