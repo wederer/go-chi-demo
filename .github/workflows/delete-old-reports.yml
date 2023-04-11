@@ -11,10 +11,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Find old folders
+      - name: Find and delete old reports
         run: |
-          chmod +x delete-old-directories.sh
-          ./delete-old-directories.sh
+          chmod +x delete-old-reports.sh
+          ./delete-old-reports.sh
         shell: bash
       - name: Commit changes
         run: |
