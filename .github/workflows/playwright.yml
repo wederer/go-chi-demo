@@ -29,6 +29,7 @@ jobs:
       - name: Run Playwright tests
         run: npm run test:playwright
       - uses: actions/upload-artifact@v3
+        if: always() # runs this step even if previous steps failed
         with:
           name: playwright-report
           # prepend frontend because upload-artifact does not use working-directory setting
@@ -40,6 +41,7 @@ jobs:
         run: echo "value=report_$(date +%F)_${{ github.run_id }}" >> $GITHUB_OUTPUT
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
+        if: always() # runs this step even if previous steps failed
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./${{ env.REPORT_DIR }}
@@ -47,13 +49,14 @@ jobs:
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
       - name: Echo Report URL to stdout
+        if: always() # runs this step even if previous steps failed
         run: |
           echo "See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}).
           The report will take a few minutes to be online."
         shell: bash
       - name: Comment Report URL to PR
         uses: thollander/actions-comment-pull-request@v2
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         with:
           message: |
             See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}).
