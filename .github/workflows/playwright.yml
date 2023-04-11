@@ -13,6 +13,8 @@ jobs:
     defaults:
       run:
         working-directory: ./frontend
+    env:
+      REPORT_DIR: frontend/e2e/playwright-report
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
@@ -30,8 +32,11 @@ jobs:
           name: playwright-report
           # prepend frontend because upload-artifact does not use working-directory setting
           # see https://github.com/actions/upload-artifact/issues/232#issuecomment-964235360
-          path: frontend/e2e/playwright-report
+          path: $REPORT_DIR
           retention-days: 30
+      - name: Set report name
+        id: report_name
+        run: echo "::set-output name=value::report_$(date +%F)_${{ github.run_id }}"
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         # If you're changing the branch from main,
@@ -40,6 +45,13 @@ jobs:
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./frontend/e2e/playwright-report
+          publish_dir: ./$REPORT_DIR
+          destination_dir: ${{ steps.report_name.outputs.value }}
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
+      - name: Comment Report URL to PR
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            See the Playwright Report at https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}
+          comment_tag: gh-pages-report-url
