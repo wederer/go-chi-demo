@@ -1,25 +1,25 @@
 name: Delete Old Folders
 
--on:
-  -  push:
-  -    branches:
-        gh-pages
+on:
+  push:
+    branches:
+      gh-pages
 
--jobs:
-  -  delete_old_folders:
-  -    runs-on: ubuntu-latest
-  -    steps:
-  -      - name: Checkout code
-  -        uses: actions/checkout@v2
-  -      - name: Find old folders
-  -        run: |
-  -          chmod +x delete-old-directories.sh
-  -          ./delete-old-directories.sh
-  -        shell: bash
-  -      - name: Commit changes
-  -        run: |
-  -          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-  -          git config --local user.name "github-actions[bot]"
-  -          git commit -a -m "Delete old folders"
-  -          git push
-  -        shell: bash
+jobs:
+  delete_old_folders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Find old folders
+        run: |
+          chmod +x delete-old-directories.sh
+          ./delete-old-directories.sh
+        shell: bash
+      - name: Commit changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git commit -a -m "Delete old folders"
+          git push
+        shell: bash
