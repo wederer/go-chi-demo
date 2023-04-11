@@ -20,6 +20,6 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git commit -a -m "Delete old folders"
-          git push
+          # only commit & push if something changed
+          git diff-index --quiet HEAD || git commit -am 'Delete old folders' && git push
         shell: bash
