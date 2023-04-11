@@ -5,7 +5,8 @@ on:
   pull_request:
     branches: [main, master]
 jobs:
-  test:
+  playwright-e2e-test:
+    name: Playwright E2E Test
     timeout-minutes: 60
     runs-on: ubuntu-latest
     permissions:
