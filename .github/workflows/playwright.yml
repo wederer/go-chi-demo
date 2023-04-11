@@ -38,20 +38,23 @@ jobs:
           retention-days: 30
       - name: Set report name
         id: report_name
-        run: echo "value=report_$(date +%F)_${{ github.run_id }}" >> $GITHUB_OUTPUT
+        if: always() # runs this step even if previous steps failed
+        run: |
+          echo "REPORT_NAME=report_$(date +%F)_${{ github.run_id }}" >> $GITHUB_OUTPUT
+          echo "setting REPORT_NAME=report_$(date +%F)_${{ github.run_id }}"
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         if: always() # runs this step even if previous steps failed
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./${{ env.REPORT_DIR }}
-          destination_dir: ${{ steps.report_name.outputs.value }}
+          destination_dir: ${{ steps.report_name.outputs.REPORT_NAME }}
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
       - name: Echo Report URL to stdout
         if: always() # runs this step even if previous steps failed
         run: |
-          echo "See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}).
+          echo "See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.REPORT_NAME }}).
           The report will take a few minutes to be online."
         shell: bash
       - name: Comment Report URL to PR
@@ -59,6 +62,6 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         with:
           message: |
-            See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}).
+            See the Playwright Report [here](https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.REPORT_NAME }}).
             The report will take a few minutes to be online.
           comment_tag: gh-pages-report-url
