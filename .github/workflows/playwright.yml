@@ -28,7 +28,6 @@ jobs:
       - name: Run Playwright tests
         run: npm run test:playwright
       - uses: actions/upload-artifact@v3
-        if: always()
         with:
           name: playwright-report
           # prepend frontend because upload-artifact does not use working-directory setting
@@ -40,18 +39,20 @@ jobs:
         run: echo "value=report_$(date +%F)_${{ github.run_id }}" >> $GITHUB_OUTPUT
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
-        # If you're changing the branch from main,
-        # also change the `main` in `refs/heads/main`
-        # below accordingly.
-        if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: "./$REPORT_DIR"
           destination_dir: ${{ steps.report_name.outputs.value }}
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
+      - name: Echo Report URL to stdout
+        run: |
+          echo "See the Playwright Report at https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}.
+            The report will take a few minutes to be online."
+        shell: bash
       - name: Comment Report URL to PR
         uses: thollander/actions-comment-pull-request@v2
+        if: github.event_name == 'pull_request'
         with:
           message: |
             See the Playwright Report at https://wederer.github.io/go-chi-demo/${{ steps.report_name.outputs.value }}.
