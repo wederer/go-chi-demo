@@ -23,7 +23,7 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 }
 
 func (s *Server) setupMockDatabase() {
-	s.Books2 = &internal.MockBooks2{}
+	s.Books = &internal.MockBooks{}
 }
 
 func TestServer_HelloWorld(t *testing.T) {
@@ -51,7 +51,7 @@ func TestServer_GetBook(t *testing.T) {
 	req, _ = http.NewRequest("GET", "/books/correct_key", nil)
 	response = executeRequest(req, s)
 	checkResponseCode(t, http.StatusOK, response.Code)
-	want := "{correct_key some_title 42}"
+	want := "{\"id\":\"correct_key\",\"title\":\"some_title\",\"no_pages\":42}"
 	got := response.Body.String()
 	if want != got {
 		t.Errorf("want is not equal to got. want: %v, got: %v", want, got)
