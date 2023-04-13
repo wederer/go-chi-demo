@@ -1,7 +1,9 @@
 package main
 
 import (
-	"github.com/wederer/go-chi-demo/internal"
+	"bytes"
+	"encoding/json"
+	"github.com/wederer/go-chi-demo/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -23,7 +25,7 @@ func checkResponseCode(t *testing.T, expected, actual int) {
 }
 
 func (s *Server) setupMockDatabase() {
-	s.Books = &internal.MockBooks{}
+	s.Books = &models.MockBooks{}
 }
 
 func TestServer_HelloWorld(t *testing.T) {
@@ -65,6 +67,55 @@ func TestServer_GetBooks(t *testing.T) {
 
 	req, _ := http.NewRequest("GET", "/books", nil)
 	response := executeRequest(req, s)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	s.Books = &models.MockBooksError{}
+	req, _ = http.NewRequest("GET", "/books", nil)
+	response = executeRequest(req, s)
+	checkResponseCode(t, http.StatusInternalServerError, response.Code)
+}
+
+func TestServer_CreateBook(t *testing.T) {
+	s := CreateNewServer()
+	s.MountHandlers()
+	s.setupMockDatabase()
+
+	req, _ := http.NewRequest("POST", "/books", nil)
+	response := executeRequest(req, s)
+	checkResponseCode(t, http.StatusBadRequest, response.Code)
+
+	mJson, _ := json.Marshal(models.Book{
+		Key:     "some_key",
+		Title:   "some_title",
+		NoPages: 0,
+	})
+	bodyReader := bytes.NewReader(mJson)
+	req, _ = http.NewRequest("POST", "/books", bodyReader)
+	response = executeRequest(req, s)
+	checkResponseCode(t, http.StatusOK, response.Code)
+
+	mJson, _ = json.Marshal(models.Book{
+		Key:     "duplicate_key",
+		Title:   "some_title",
+		NoPages: 0,
+	})
+	bodyReader = bytes.NewReader(mJson)
+	req, _ = http.NewRequest("POST", "/books", bodyReader)
+	response = executeRequest(req, s)
+	checkResponseCode(t, http.StatusConflict, response.Code)
+}
+
+func TestServer_DeleteBook(t *testing.T) {
+	s := CreateNewServer()
+	s.MountHandlers()
+	s.setupMockDatabase()
+
+	req, _ := http.NewRequest("DELETE", "/books/1235", nil)
+	response := executeRequest(req, s)
+	checkResponseCode(t, http.StatusNotFound, response.Code)
+
+	req, _ = http.NewRequest("DELETE", "/books/correct_key", nil)
+	response = executeRequest(req, s)
 	checkResponseCode(t, http.StatusOK, response.Code)
 }
 

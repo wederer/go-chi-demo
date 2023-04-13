@@ -129,7 +129,7 @@ func (s *Server) SetupDatabase() {
 	}
 
 	s.DB = db
-	s.Books = models.New(db, "books")
+	s.Books = models.NewBookModel(db)
 }
 
 func (s *Server) Start() {

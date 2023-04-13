@@ -12,16 +12,6 @@ type Book struct {
 	NoPages int    `json:"no_pages"`
 }
 
-//type Model[T any] struct {
-//	Read func(key string) (T, error)
-//	ReadAll() ([]T, error)
-//	Delete(key string) error
-//	Create(T) (T, error)
-//}
-//func (m Model[T]) Read(key string) (T, error) {
-//	return m.Read(key)
-//}
-
 type BookModel struct {
 	db   driver.Database
 	coll driver.Collection
@@ -29,21 +19,21 @@ type BookModel struct {
 
 const NotFoundErrorCode = "not found"
 
-func (b *BookModel) ReadAll() ([]Book, error) {
+func (m *BookModel) ReadAll() ([]*Book, error) {
 	var books = make(map[string]interface{}, 0)
-	var booksSlice = make([]Book, 0)
+	var returnSlice = make([]*Book, 0)
 	ctx := driver.WithQueryCount(nil)
-	cursor, err := b.db.Query(ctx, "FOR doc IN books RETURN doc", books)
+	cursor, err := m.db.Query(ctx, "FOR doc IN books RETURN doc", books)
 	defer cursor.Close()
 	if err != nil {
 		return nil, err
 	}
 
 	for i := 0; i < int(cursor.Count()); i++ {
-		var book Book
+		var book *Book
 		meta, _ := cursor.ReadDocument(nil, &book)
 		book.Key = meta.Key
-		booksSlice = append(booksSlice, book)
+		returnSlice = append(returnSlice, book)
 	}
 
 	if &books == nil || driver.IsNotFoundGeneral(err) {
@@ -55,11 +45,11 @@ func (b *BookModel) ReadAll() ([]Book, error) {
 		return nil, err
 	}
 
-	return booksSlice, nil
+	return returnSlice, nil
 }
 
-func (b *BookModel) Delete(key string) error {
-	_, err := b.coll.RemoveDocument(nil, key)
+func (m *BookModel) Delete(key string) error {
+	_, err := m.coll.RemoveDocument(nil, key)
 	if driver.IsNotFoundGeneral(err) {
 		return errors.New(NotFoundErrorCode)
 	}
@@ -71,10 +61,10 @@ func (b *BookModel) Delete(key string) error {
 	return nil
 }
 
-func (b *BookModel) Create(book Book) (*Book, error) {
+func (m *BookModel) Create(book Book) (*Book, error) {
 	var result Book
 	ctx := driver.WithReturnNew(nil, &result)
-	_, err := b.coll.CreateDocument(ctx, book)
+	_, err := m.coll.CreateDocument(ctx, &book)
 	if err != nil {
 		log.Printf("Failed to create document: %v", err)
 		return nil, err
@@ -84,16 +74,38 @@ func (b *BookModel) Create(book Book) (*Book, error) {
 	return &result, nil
 }
 
-func (b *BookModel) Read(key string) (*Book, error) {
-	var book Book
-	meta, err := b.coll.ReadDocument(nil, key, &book)
+func (m *BookModel) Read(key string) (*Book, error) {
+	var book *Book
+	meta, err := m.coll.ReadDocument(nil, key, &book)
 	if err != nil {
 		return nil, err
 	}
 
-	if &book != nil {
+	if book != nil {
 		book.Key = meta.Key
-		return &book, nil
+		return book, nil
 	}
 	panic("some unknown error")
+}
+
+func NewBookModel(dbIn driver.Database) *BookModel {
+	collectionName := "books"
+	colExists, err := dbIn.CollectionExists(nil, collectionName)
+	if err != nil {
+		log.Fatalf("Failed to check for collection: %v", err)
+	}
+	var coll driver.Collection
+	if colExists == true {
+		coll, err = dbIn.Collection(nil, collectionName)
+	} else {
+		coll, err = dbIn.CreateCollection(nil, collectionName, nil)
+	}
+	if err != nil {
+		log.Fatalf("Failed to create/get collection: %v", err)
+	}
+
+	return &BookModel{
+		db:   dbIn,
+		coll: coll,
+	}
 }

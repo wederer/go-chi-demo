@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"github.com/arangodb/go-driver"
 )
 
@@ -20,8 +21,8 @@ func (m MockBooks) Read(key string) (*Book, error) {
 	}
 }
 
-func (m MockBooks) ReadAll() ([]Book, error) {
-	books := []Book{{
+func (m MockBooks) ReadAll() ([]*Book, error) {
+	books := []*Book{{
 		Key:     "some_key",
 		Title:   "some_title",
 		NoPages: 42,
@@ -34,21 +35,36 @@ func (m MockBooks) ReadAll() ([]Book, error) {
 	return books, nil
 }
 
-// TODO by doing something along those lines I could test error cases for methods that dont have a parameter
-//type MockBooksError struct{}
-//
-//func (m MockBooksError) ReadAll() ([]models.Book, error) {
-//	return nil, driver.ArangoError{
-//		Code: 500,
-//	}
-//}
-
 func (m MockBooks) Delete(key string) error {
-	//TODO implement me
-	panic("implement me")
+	if key != "correct_key" {
+		return errors.New(NotFoundErrorCode)
+	}
+	return nil
 }
 
 func (m MockBooks) Create(book Book) (*Book, error) {
-	//TODO implement me
-	panic("implement me")
+	if book.Key == "duplicate_key" {
+		return nil, driver.ArangoError{
+			Code: driver.ErrArangoConflict,
+		}
+	}
+	return &book, nil
+}
+
+// To test errors in ReadAll use this mock
+type MockBooksError struct{}
+
+func (m MockBooksError) ReadAll() ([]*Book, error) {
+	return nil, driver.ArangoError{
+		Code: 500,
+	}
+}
+func (m MockBooksError) Read(key string) (*Book, error) {
+	panic("use MockBooks to test this method")
+}
+func (m MockBooksError) Delete(key string) error {
+	panic("use MockBooks to test this method")
+}
+func (m MockBooksError) Create(book Book) (*Book, error) {
+	panic("use MockBooks to test this method")
 }

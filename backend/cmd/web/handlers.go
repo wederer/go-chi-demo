@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/arangodb/go-driver"
 	"github.com/go-chi/chi/v5"
@@ -65,6 +66,12 @@ func (s *Server) GetBooks(w http.ResponseWriter, _ *http.Request) {
 func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
 	var book models.Book
 
+	if r.Body == nil {
+		log.Printf("No body was provided: %v", r.Body)
+		http.Error(w, "no body provided", http.StatusBadRequest)
+		return
+	}
+
 	err := json.NewDecoder(r.Body).Decode(&book)
 	if err != nil {
 		log.Printf("Failed to parse body %v with error: %v", r.Body, err)
@@ -75,7 +82,12 @@ func (s *Server) CreateBook(w http.ResponseWriter, r *http.Request) {
 	result, err := s.Books.Create(book)
 	if err != nil {
 		log.Printf("Failed to create document: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, driver.ArangoError{Code: driver.ErrArangoConflict}):
+			http.Error(w, err.Error(), http.StatusConflict)
+		default:
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 		return
 	}
 
