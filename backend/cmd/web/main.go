@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	driver "github.com/arangodb/go-driver"
 	driverhttp "github.com/arangodb/go-driver/http"
 	"github.com/go-chi/chi/v5"
@@ -26,9 +27,7 @@ func main() {
 type Server struct {
 	Router *chi.Mux
 	DB     driver.Database
-	// TODO: replace this with Books2
-	Books  driver.Collection
-	Books2 models.BookModelInterface
+	Books  models.ModelInterface[models.Book]
 }
 
 func CreateNewServer() *Server {
@@ -129,23 +128,8 @@ func (s *Server) SetupDatabase() {
 		log.Fatalf("Failed to create/get database: %v", err)
 	}
 
-	colExists, err := db.CollectionExists(nil, "books")
-	if err != nil {
-		log.Fatalf("Failed to check for collection: %v", err)
-	}
-	var coll driver.Collection
-	if colExists == true {
-		coll, err = db.Collection(nil, "books")
-	} else {
-		coll, err = db.CreateCollection(nil, "books", nil)
-	}
-	if err != nil {
-		log.Fatalf("Failed to create/get collection: %v", err)
-	}
-
 	s.DB = db
-	s.Books = coll
-	s.Books2 = models.New(db)
+	s.Books = models.NewBookModel(db)
 }
 
 func (s *Server) Start() {
@@ -158,4 +142,16 @@ func (s *Server) Start() {
 	if err != nil {
 		log.Fatalf("Error starting server: %v\n", err)
 	}
+}
+
+func Marshall[T any](in T, w http.ResponseWriter) {
+	mJson, err := json.Marshal(in)
+
+	if err != nil {
+		log.Printf("Failed to marshall document: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(mJson)
 }
